@@ -8,11 +8,11 @@ uint32_t tick = 0;
 
 static void timer_callback(registers_t *regs) {
     tick++;
-    print_string("Tick: ");
+    print_string_defcol("Tick: ");
 
     char tick_ascii[256];
     int_to_string(tick, tick_ascii);
-    print_string(tick_ascii);
+    print_string_defcol(tick_ascii);
     print_nl();
 }
 
