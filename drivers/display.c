@@ -4,6 +4,18 @@
 #include "../kernel/mem.h"
 #include "../kernel/util.h"
 
+//#define DEFCOLORMODE WHITE_ON_BLUE //set the default colormode to use
+
+char get_defcolor(){
+    //return DEFCOLORMODE;
+    return mix_color(WHITE, BLUE); //C64-Mode
+}
+
+char mix_color(char foreground, char background){
+    // calculates the color by shifting the background color four bits to the left and then adding the foreground color
+    return (background << 4) + foreground;
+}
+
 void set_cursor(int offset) {
     offset /= 2;
     port_byte_out(REG_SCREEN_CTRL, 14);
@@ -32,10 +44,10 @@ int move_offset_to_new_line(int offset) {
     return get_offset(0, get_row_from_offset(offset) + 1);
 }
 
-void set_char_at_video_memory(char character, int offset) {
+void set_char_at_video_memory(char character, int offset, char col) {
     uint8_t *vidmem = (uint8_t *) VIDEO_ADDRESS;
     vidmem[offset] = character;
-    vidmem[offset + 1] = WHITE_ON_BLACK;
+    vidmem[offset + 1] = col;
 }
 
 int scroll_ln(int offset) {
@@ -46,7 +58,7 @@ int scroll_ln(int offset) {
     );
 
     for (int col = 0; col < MAX_COLS; col++) {
-        set_char_at_video_memory(' ', get_offset(col, MAX_ROWS - 1));
+        set_char_at_video_memory(' ', get_offset(col, MAX_ROWS - 1), get_defcolor());
     }
 
     return offset - 2 * MAX_COLS;
@@ -56,7 +68,7 @@ int scroll_ln(int offset) {
  * TODO:
  * - handle illegal offset (print error message somewhere)
  */
-void print_string(char *string) {
+void print_string(char *string, char color) {
     int offset = get_cursor();
     int i = 0;
     while (string[i] != 0) {
@@ -66,7 +78,39 @@ void print_string(char *string) {
         if (string[i] == '\n') {
             offset = move_offset_to_new_line(offset);
         } else {
-            set_char_at_video_memory(string[i], offset);
+            set_char_at_video_memory(string[i], offset, color);
+            offset += 2;
+        }
+        i++;
+    }
+    set_cursor(offset);
+}
+
+void print_char(char *chr, char color) {
+    int offset = get_cursor();
+    if (offset >= MAX_ROWS * MAX_COLS * 2) {
+        offset = scroll_ln(offset);
+    }
+    if (chr[0] == '\n') {
+        offset = move_offset_to_new_line(offset);
+    } else {
+        set_char_at_video_memory(chr[0], offset, color);
+        offset += 2;
+    }
+    set_cursor(offset);
+}
+
+void print_string_defcol(char *string) {
+    int offset = get_cursor();
+    int i = 0;
+    while (string[i] != 0) {
+        if (offset >= MAX_ROWS * MAX_COLS * 2) {
+            offset = scroll_ln(offset);
+        }
+        if (string[i] == '\n') {
+            offset = move_offset_to_new_line(offset);
+        } else {
+            set_char_at_video_memory(string[i], offset, get_defcolor());
             offset += 2;
         }
         i++;
@@ -85,13 +129,13 @@ void print_nl() {
 void clear_screen() {
     int screen_size = MAX_COLS * MAX_ROWS;
     for (int i = 0; i < screen_size; ++i) {
-        set_char_at_video_memory(' ', i * 2);
+        set_char_at_video_memory(' ', i * 2, get_defcolor());
     }
     set_cursor(get_offset(0, 0));
 }
 
 void print_backspace() {
     int newCursor = get_cursor() - 2;
-    set_char_at_video_memory(' ', newCursor);
+    set_char_at_video_memory(' ', newCursor, get_defcolor());
     set_cursor(newCursor);
 }

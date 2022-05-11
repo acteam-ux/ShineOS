@@ -41,31 +41,31 @@ void init_dynamic_mem() {
 void print_dynamic_node_size() {
     char node_size_string[256];
     int_to_string(DYNAMIC_MEM_NODE_SIZE, node_size_string);
-    print_string("DYNAMIC_MEM_NODE_SIZE = ");
-    print_string(node_size_string);
+    print_string_defcol("DYNAMIC_MEM_NODE_SIZE = ");
+    print_string_defcol(node_size_string);
     print_nl();
 }
 
 void print_dynamic_mem_node(dynamic_mem_node_t *node) {
     char size_string[256];
     int_to_string(node->size, size_string);
-    print_string("{size = ");
-    print_string(size_string);
+    print_string_defcol("{size = ");
+    print_string_defcol(size_string);
     char used_string[256];
     int_to_string(node->used, used_string);
-    print_string("; used = ");
-    print_string(used_string);
-    print_string("}; ");
+    print_string_defcol("; used = ");
+    print_string_defcol(used_string);
+    print_string_defcol("}; ");
 }
 
 void print_dynamic_mem() {
     dynamic_mem_node_t *current = dynamic_mem_start;
-    print_string("[");
+    print_string_defcol("[");
     while (current != NULL_POINTER) {
         print_dynamic_mem_node(current);
         current = current->next;
     }
-    print_string("]\n");
+    print_string_defcol("]\n");
 }
 
 void *find_best_mem_block(dynamic_mem_node_t *dynamic_mem, size_t size) {
